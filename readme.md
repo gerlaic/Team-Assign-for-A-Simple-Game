@@ -1,127 +1,113 @@
-import sys
+This is a small program to assign teams for a simple game. 
 
-#import data from keyboard (stdin)
-team_count = 0 #init the team count
-print("###Input the number of teams in the game###")
-team_count = int(sys.stdin.readline())
-
-list_units = [] #init the list
-
-print("###Input each unit's attack power and defense power, seperated by a comment###")
-print("###Input nothing to end###")
-while True:
-    line = sys.stdin.readline()
-
-    if (line=='\n'):
-        break
-    
-    attr = line.split(',')
-    attack = int(attr[0])
-    defense = int(attr[1][0:(len(attr[1])-1)])
-    list_units.append([attack,defense])
+The units has two attributes: an "attack power" and a "defense power", both integers.
+The program will take a list of units and a number of teams, and assign units to teams to create a balanced fight.
 
 
-#override parameters for easy testing
-#list_units = [[5,1],[9,1],[7,4],[1,3],[1,3],[10,4],[4,5],[7,4]]
-#team_count = 2
+# Language: 
+Python
 
-#list_units = [[6,10],[10,10],[4,8],[2,4],[8,4],[6,4],[8,2],[10,2],[8,8],[8,6],[2,10],[4,10],[10,6],[8,10],[4,6]]
-#team_count = 3
+# Input: 
+keyboard (stdin)
 
-#functions
-#insert index into data
-def insertIndex(data):
-    
-    for i in range(0,len(data)):
-        data[i].append(i)
-    return data
+# Output: 
+Output Console
 
-#get sum of a [[]] list in specific index    
-def getSum(list,index):
-    result = 0
-    for element in list:
-        result = result + element[index]
-    return result
+# Assumptions: 
+the user who uses it knows the format of input. That is, there will not be 
 
-#fill up the units to make the function work for any amount of units
-for i in range(0, len(list_units) - int(len(list_units)/team_count)*team_count):
-    list_units.append([0,0,-1])
+unexpected inputs that cause the program crash.
 
-#insert index to the units
-list_units_with_index = insertIndex(list_units)
+# To use this solution, you first need to input the number of teams in the game. 
 
-#sort by attack
-#you can use any of the sorting methods. I'm going to use the internal one in python
-list_units_with_index = sorted(list_units_with_index, key=lambda unit:unit[0], reverse = True)
+Then you need to input the units, with each unit’s attack power and defense power separated by 
 
-#initiating all the variables we need
-dA = []
-dD = []
-for i in range(0,team_count):
-    dA.append([0])
-    dD.append([0])
-dA = insertIndex(dA)
-dD = insertIndex(dD)
+a comment. End by hit enter without any input.
 
-result = []
-for i in range(0,team_count):
-    result.append([])
+It then shows the result. The result contains two parts: how it assigns the units into N groups and 
 
-#initiating type : 0 = Attack, 1 = Defense
-type=0
+how strong each group is. 
 
-#create default order: g1,g2,g3...
-order=[]
-for i in range(0,team_count):
-    order.append(i)
+There are two internal override parameters in the program. Uncomment them to have easy 
 
-team_attributes = []
-for i in range(0,team_count):
-    team_attributes.append([0,0])
+testing without input the data manually.
 
-#start assigning
-for i in range(1,int(len(list_units_with_index)/team_count)+1):
-    data=[]
-    
-    for j in range(1,team_count+1):
-        data.insert(0,list_units_with_index[i*team_count-j])
-    
-    data=sorted(data, key=lambda unit:unit[type], reverse = True)
-    
-    for i in range(0,team_count):
-        result[order[i]].append(data[i][2])
-        new_attack = team_attributes[order[i]][0] + data[i][0]
-        new_defend = team_attributes[order[i]][1] + data[i][1]
-        team_attributes[order[i]]=[new_attack, new_defend]
+# How the solution works:
 
-    #get new dA and dD
-    for i in range(0,team_count-1):
-        dA[i+1][0] = team_attributes[i+1][0] - team_attributes[i][0]
-        dD[i+1][0] = team_attributes[i+1][1] - team_attributes[i][1]
+1. read in the inputs from stdin.
 
-    #check which difference is bigger, and decide which attribute we are going to look at when sorting next time
-    sum_dA = getSum(dA,0)
-    sum_dD = getSum(dD,0)
-    if (abs(sum_dA) >= abs(sum_dD)):
-        type = 0
-        sorted_d = sorted(dA, key=lambda unit:unit[0])
-    else:
-        type = 1
-        sorted_d = sorted(dD, key=lambda unit:unit[0])
+2. If each group cannot have same amount of units ( Total_unit_amount / team_amount != 
 
-    #creating new order
-    order = []
-    for i in range(0,team_count):
-        order.append(sorted_d[i][1])
+Integer), we fill up the units with 0 Attack power, 0 Defense power and index -1.
 
-#clear temporary units
-for i in range(0,2):
-    for index in result[i]:
-        if (index == -1):
-            result[i].remove(-1)
+3. Sort the units by their Attack power from largest to smallest.
 
-#output result
-print("final result:")
-print(result)
-print("with attributes:")
-print(team_attributes)
+4. Then we start assigning. First, we put the largest N units out of the pool and put each of 
+
+them into each group. We get the difference of each group’s attack power and defense power 
+
+compared to the first group (dA1, dA2, dA3, ...; dD1, dD2, dD3, ...) . 
+
+5. Sum up the difference of attack power of each group and the defense power as well. We 
+
+get sum_A and sum_D. We compare them and decide which attribute needs to be fixed more. 
+
+6. Knowing the type we are fixing, we sort the groups’ attribute by the selected type and get 
+
+the order of next assigning. 
+
+7. After this, we entering a loop of assigning. Each time, we take out N units (U1, U2, U3 ... UN)
+
+where N is the number of teams in the game. We put each of them into each group and get the 
+
+new attack power and defense power of each group with the order we get from previous assign. 
+
+We then get dA s and dD s again. By summing them up, we get our new sum_A and sum_D. We 
+
+decide the type we are going to use next time and get the new order.
+
+8. Finally, we get rid of the temporary units [0, 0, -1]s and output the result.
+
+# Solution Analysis
+
+> This solution works fine in the 10 trials with different group amount (2 -6) and random attributes 
+
+(0-10). It takes the largest numbers at first to create a potential large gap for the smaller units to 
+
+fit in. Although the groups’ attributes are not absolute equal to each other, it’s totally fine with a 
+
+difference less than ±5% of the total attribute sum since there is a random factor for each 
+
+attributes when the groups are taking combat. For example, suppose we have a group with A/D 
+
+(32,38) and another group with A/D (32,32). It looks like group 2 is absolutely weaker than group 
+
+1. However, there still is 43.4% chance that group 2 can beat group 1, which is quite an even 
+
+possibility for either of the two group to win the combat. 
+
+> The limitation of my solution is that it cannot pass through extreme situations (i.e.: we have a 
+
+super strong “Boss-leveled” unit with its attack power and defense power >> the rest.) My 
+
+solution works well when the unit group can be assigned equally not only their quality (attack 
+
+power and defense power) but also quantity (Each group has similar amount of units where the 
+
+difference is ±1). The reason I still use this method is that I think for most situation in Games, we 
+
+want the players/units amount to be close. Otherwise it will be a “Boss-stage” (One unit >> rest) 
+
+which we don’t really want to assign the units by the system. Or if it’s a PvP game, one of the 
+
+players will get the big guy and the others will have number advantages. According to the 
+
+combat rule I was offered, the extreme situation messed it up since either the rest will have 
+
+“free hits” where the number advantage is huge, or the rest still need to hit the big guy where 
+
+the big guy becomes both the Tank and the Nuke of the team and can swept out a large amount 
+
+of enemies. It will need a more complicated combat rule (i.e. including taunt rules) for situations 
+
+that have different unit amounts in different groups.
